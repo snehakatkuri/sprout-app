@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Next.js Build" type="js.build_tools.npm" factoryName="npm">
+    <node-interpreter value="project" />
+    <package-json value="$PROJECT_DIR$/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="build" />
+    </scripts>
+    <node-options value="" />
+    <arguments value="" />
+    <envs />
+    <method v="2" />
+  </configuration>
+</component>
