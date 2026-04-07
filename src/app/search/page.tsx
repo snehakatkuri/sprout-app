@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import { INTERESTS } from "@/types";
@@ -18,6 +18,14 @@ const BUDGET_OPTIONS = [
 ] as const;
 
 export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FAFAF6]" />}>
+      <SearchContent />
+    </Suspense>
+  );
+}
+
+function SearchContent() {
   const router = useRouter();
   const params = useSearchParams();
 

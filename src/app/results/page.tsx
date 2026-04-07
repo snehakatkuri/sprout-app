@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Navbar from "@/components/layout/Navbar";
@@ -19,6 +19,14 @@ const PIN_POSITIONS = [
 ];
 
 export default function ResultsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FAFAF6] flex items-center justify-center text-[#9A9590]">Loading…</div>}>
+      <ResultsContent />
+    </Suspense>
+  );
+}
+
+function ResultsContent() {
   const router     = useRouter();
   const params     = useSearchParams();
   const [hovered, setHovered]       = useState<string | null>(null);
