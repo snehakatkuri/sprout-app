@@ -1,24 +1,56 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Navbar from "@/components/layout/Navbar";
-import { mockActivities } from "@/lib/mockActivities";
 import { Activity } from "@/types";
 
-const MAP_PINS = [
-  { id: "1", label: "Tiny Brushstrokes", left: "30%", top: "45%" },
-  { id: "2", label: "Golden Gate Trail",  left: "55%", top: "32%" },
-  { id: "3", label: "Exploratorium",      left: "70%", top: "55%" },
-  { id: "4", label: "Aqua Cubs",          left: "22%", top: "65%" },
-  { id: "5", label: "Little Composers",  left: "45%", top: "70%" },
-  { id: "6", label: "SF Zoo",             left: "60%", top: "78%" },
+// Distribute pins across the illustrated map
+const PIN_POSITIONS = [
+  { left: "30%", top: "45%" },
+  { left: "55%", top: "32%" },
+  { left: "70%", top: "55%" },
+  { left: "22%", top: "65%" },
+  { left: "45%", top: "70%" },
+  { left: "60%", top: "78%" },
+  { left: "80%", top: "35%" },
+  { left: "15%", top: "40%" },
 ];
 
 export default function ResultsPage() {
-  const router = useRouter();
-  const [hovered, setHovered] = useState<string | null>(null);
+  const router     = useRouter();
+  const params     = useSearchParams();
+  const [hovered, setHovered]       = useState<string | null>(null);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [location, setLocation]     = useState("your area");
+  const [loading, setLoading]       = useState(true);
+  const [sortBy, setSortBy]         = useState("best");
+
+  useEffect(() => {
+    const query = new URLSearchParams({
+      location:  params.get("location")  ?? "",
+      distance:  params.get("distance")  ?? "10",
+      travel:    params.get("travel")    ?? "30",
+      budget:    params.get("budget")    ?? "any",
+      interests: params.get("interests") ?? "",
+    });
+
+    fetch(`/api/activities?${query.toString()}`)
+      .then(r => r.json())
+      .then(data => {
+        setActivities(data.activities ?? []);
+        setLocation(data.location ?? "your area");
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [params]);
+
+  const sorted = [...activities].sort((a, b) => {
+    if (sortBy === "distance") return a.distanceMiles - b.distanceMiles;
+    if (sortBy === "price")    return (a.cost ?? 0) - (b.cost ?? 0);
+    return a.distanceMiles - b.distanceMiles; // default: distance
+  });
 
   return (
     <div className="min-h-screen bg-[#FAFAF6] flex flex-col">
@@ -30,43 +62,82 @@ export default function ResultsPage() {
           {/* Toolbar */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-[#EAE8E2] bg-white flex-shrink-0">
             <div>
-              <span className="font-[family-name:var(--font-fraunces)] text-xl font-normal text-[#1E3A1E]">
-                {mockActivities.length} activities
-              </span>{" "}
-              <span className="text-sm text-[#9A9590]">near San Francisco</span>
+              {loading ? (
+                <span className="text-sm text-[#9A9590]">Searching…</span>
+              ) : (
+                <>
+                  <span className="font-[family-name:var(--font-fraunces)] text-xl font-normal text-[#1E3A1E]">
+                    {activities.length} activities
+                  </span>{" "}
+                  <span className="text-sm text-[#9A9590]">near {location}</span>
+                </>
+              )}
             </div>
-            <select className="text-xs font-medium px-3 py-2 border border-[#EAE8E2] rounded-full bg-white text-[#1C1C1A] outline-none cursor-pointer appearance-none pr-7"
-              style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%239A9590' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center" }}>
-              <option>Best match</option>
-              <option>Distance</option>
-              <option>Price: low–high</option>
-              <option>Age fit</option>
+            <select
+              className="text-xs font-medium px-3 py-2 border border-[#EAE8E2] rounded-full bg-white text-[#1C1C1A] outline-none cursor-pointer appearance-none pr-7"
+              style={{
+                backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%239A9590' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E\")",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 8px center",
+              }}
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+            >
+              <option value="best">Best match</option>
+              <option value="distance">Distance</option>
+              <option value="price">Price: low–high</option>
             </select>
           </div>
 
           {/* Cards */}
           <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3.5">
-            {mockActivities.map(activity => (
-              <ActivityCard
-                key={activity.id}
-                activity={activity}
-                highlighted={hovered === activity.id}
-                onHover={setHovered}
-                onClick={() => router.push(`/activity/${activity.id}`)}
-              />
-            ))}
+            {loading ? (
+              // Skeleton cards
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex bg-white border border-[#EAE8E2] rounded-[22px] overflow-hidden h-[110px] animate-pulse">
+                  <div className="w-[110px] flex-shrink-0 bg-[#EAE8E2]" />
+                  <div className="p-4 flex flex-col gap-2 flex-1">
+                    <div className="h-2.5 bg-[#EAE8E2] rounded w-1/3" />
+                    <div className="h-4 bg-[#EAE8E2] rounded w-3/4" />
+                    <div className="h-2.5 bg-[#EAE8E2] rounded w-1/2" />
+                  </div>
+                </div>
+              ))
+            ) : sorted.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center py-16 gap-3">
+                <span className="text-4xl">🔍</span>
+                <div className="font-[family-name:var(--font-fraunces)] text-lg text-[#1E3A1E]">No activities found</div>
+                <p className="text-sm text-[#9A9590] max-w-[260px]">Try adjusting your filters — a wider distance or different budget might help.</p>
+                <button
+                  onClick={() => router.push("/search")}
+                  className="mt-2 px-5 py-2.5 rounded-full bg-[#1E3A1E] text-white text-sm font-medium hover:bg-[#4C7A3A] transition-colors"
+                >
+                  Edit search
+                </button>
+              </div>
+            ) : (
+              sorted.map(activity => (
+                <ActivityCard
+                  key={activity.id}
+                  activity={activity}
+                  highlighted={hovered === activity.id}
+                  onHover={setHovered}
+                  onClick={() => router.push(`/activity/${activity.id}`)}
+                />
+              ))
+            )}
           </div>
         </div>
 
         {/* ── Map panel ── */}
         <div className="flex-1 relative overflow-hidden bg-[#EEF5E8]">
-          {/* Grid lines */}
-          <div className="absolute inset-0"
+          <div
+            className="absolute inset-0"
             style={{
-              background: "repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(107,160,80,.08) 60px), repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(107,160,80,.08) 60px)"
+              background:
+                "repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(107,160,80,.08) 60px), repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(107,160,80,.08) 60px)",
             }}
           />
-          {/* Roads SVG */}
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 800 600" fill="none" preserveAspectRatio="xMidYMid slice">
             <path d="M0 200 Q200 180 400 220 T800 200" stroke="rgba(255,255,255,0.7)" strokeWidth="10"/>
             <path d="M0 350 Q300 320 500 370 T800 340" stroke="rgba(255,255,255,0.7)" strokeWidth="10"/>
@@ -78,32 +149,34 @@ export default function ResultsPage() {
             <path d="M0 450 L800 445" stroke="rgba(255,255,255,0.3)" strokeWidth="5"/>
           </svg>
 
-          {/* Pins */}
-          {MAP_PINS.map(pin => (
-            <button
-              key={pin.id}
-              onClick={() => router.push(`/activity/${pin.id}`)}
-              onMouseEnter={() => setHovered(pin.id)}
-              onMouseLeave={() => setHovered(null)}
-              className="absolute flex flex-col items-center z-10 group"
-              style={{ left: pin.left, top: pin.top, transform: "translate(-50%, -100%)" }}
-            >
-              <div className={[
-                "text-white text-xs font-semibold rounded-[8px] px-2.5 py-1.5 whitespace-nowrap shadow-sm transition-all",
-                hovered === pin.id ? "bg-[#4C7A3A] scale-110" : "bg-[#1E3A1E]",
-              ].join(" ")}>
-                {pin.label}
-              </div>
-              <div className={[
-                "w-0 h-0 border-l-[6px] border-r-[6px] border-l-transparent border-r-transparent border-t-[8px] transition-all",
-                hovered === pin.id ? "border-t-[#4C7A3A]" : "border-t-[#1E3A1E]",
-              ].join(" ")} />
-            </button>
-          ))}
+          {/* Pins for first N results */}
+          {!loading && sorted.slice(0, 8).map((activity, i) => {
+            const pos = PIN_POSITIONS[i % PIN_POSITIONS.length];
+            return (
+              <button
+                key={activity.id}
+                onClick={() => router.push(`/activity/${activity.id}`)}
+                onMouseEnter={() => setHovered(activity.id)}
+                onMouseLeave={() => setHovered(null)}
+                className="absolute flex flex-col items-center z-10"
+                style={{ left: pos.left, top: pos.top, transform: "translate(-50%, -100%)" }}
+              >
+                <div className={[
+                  "text-white text-xs font-semibold rounded-[8px] px-2.5 py-1.5 whitespace-nowrap shadow-sm transition-all",
+                  hovered === activity.id ? "bg-[#4C7A3A] scale-110" : "bg-[#1E3A1E]",
+                ].join(" ")}>
+                  {activity.name.length > 22 ? activity.name.slice(0, 22) + "…" : activity.name}
+                </div>
+                <div className={[
+                  "w-0 h-0 border-l-[6px] border-r-[6px] border-l-transparent border-r-transparent border-t-[8px] transition-all",
+                  hovered === activity.id ? "border-t-[#4C7A3A]" : "border-t-[#1E3A1E]",
+                ].join(" ")} />
+              </button>
+            );
+          })}
 
-          {/* Center label */}
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white rounded-[14px] px-5 py-3 text-sm text-[#9A9590] shadow-md flex items-center gap-2 z-10">
-            <span>📍</span> San Francisco, CA
+            <span>📍</span> {location}
           </div>
         </div>
       </div>
@@ -131,25 +204,26 @@ function ActivityCard({
       onMouseEnter={() => onHover(activity.id)}
       onMouseLeave={() => onHover(null)}
     >
-      <div className="w-[110px] flex-shrink-0 relative overflow-hidden">
+      <div className="w-[110px] flex-shrink-0 relative overflow-hidden bg-[#EAE8E2]">
         <Image
           src={activity.imageUrl}
           alt={activity.name}
           fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className="object-cover"
           sizes="110px"
+          unoptimized
         />
       </div>
-      <div className="p-4 flex flex-col gap-2 flex-1">
+      <div className="p-4 flex flex-col gap-2 flex-1 min-w-0">
         <div className="text-[11px] font-bold tracking-[.07em] uppercase text-[#4C7A3A]">
           {activity.type}
         </div>
-        <div className="font-[family-name:var(--font-fraunces)] text-[17px] font-normal text-[#1E3A1E] leading-tight">
+        <div className="font-[family-name:var(--font-fraunces)] text-[17px] font-normal text-[#1E3A1E] leading-tight truncate">
           {activity.name}
         </div>
         <div className="flex flex-wrap gap-2.5 text-xs text-[#9A9590]">
-          <span>📍 {activity.distanceMiles} miles</span>
-          <span>🕐 {activity.driveMinutes} min drive</span>
+          <span>📍 {activity.distanceMiles} mi</span>
+          <span>🕐 {activity.driveMinutes} min</span>
         </div>
         <div className="flex gap-1.5 flex-wrap mt-1">
           <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(107,160,80,.12)] text-[#4C7A3A]">
