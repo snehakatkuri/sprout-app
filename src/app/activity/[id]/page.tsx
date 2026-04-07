@@ -137,9 +137,14 @@ export default function ActivityDetailPage() {
             </div>
           </div>
           <p className="text-xs text-[#9A9590] leading-relaxed mb-3">{activity.address}</p>
-          <button className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#1E3A1E] text-white text-sm font-medium rounded-[14px] hover:bg-[#4C7A3A] transition-colors">
+          <a
+            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(activity.address)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#1E3A1E] text-white text-sm font-medium rounded-[14px] hover:bg-[#4C7A3A] transition-colors"
+          >
             🗺️ Get directions
-          </button>
+          </a>
         </div>
       </div>
     </div>
