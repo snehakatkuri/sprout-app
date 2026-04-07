@@ -64,9 +64,10 @@ function ResultsContent() {
     <div className="min-h-screen bg-[#FAFAF6] flex flex-col">
       <Navbar />
 
-      <div className="flex flex-1 overflow-hidden" style={{ height: "calc(100vh - 64px)" }}>
+      {/* Mobile: stack vertically. Desktop: side-by-side */}
+      <div className="flex flex-col md:flex-row flex-1 md:overflow-hidden" style={{ height: undefined }}>
         {/* ── Left panel ── */}
-        <div className="flex flex-col border-r border-[#EAE8E2] overflow-hidden" style={{ width: 420, flexShrink: 0 }}>
+        <div className="flex flex-col border-b md:border-b-0 md:border-r border-[#EAE8E2] md:overflow-hidden w-full md:w-[420px] md:flex-shrink-0">
           {/* Toolbar */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-[#EAE8E2] bg-white flex-shrink-0">
             <div>
@@ -137,8 +138,8 @@ function ResultsContent() {
           </div>
         </div>
 
-        {/* ── Map panel ── */}
-        <div className="flex-1 relative overflow-hidden bg-[#EEF5E8]">
+        {/* ── Map panel ── hidden on mobile, shown on md+ */}
+        <div className="hidden md:block flex-1 relative overflow-hidden bg-[#EEF5E8]">
           <div
             className="absolute inset-0"
             style={{

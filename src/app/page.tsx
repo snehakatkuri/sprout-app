@@ -1,5 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
+
+export const metadata: Metadata = {
+  title: "Sprout — Discover activities your kids will love",
+  description: "Find kid-friendly activities near you — matched to your child's age, interests, and budget. Free to use.",
+  openGraph: {
+    title: "Sprout — Discover activities your kids will love",
+    description: "Find kid-friendly activities near you — matched to your child's age, interests, and budget.",
+    type: "website",
+  },
+};
 
 const CATEGORIES = [
   { label: "Sports",        emoji: "⚽", tag: "Sports" },

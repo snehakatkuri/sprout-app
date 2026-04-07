@@ -30,7 +30,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between px-10 h-16 bg-[#FAFAF6]/90 backdrop-blur-md border-b border-[#EAE8E2]">
+    <nav className="sticky top-0 z-50 flex items-center justify-between px-5 sm:px-10 h-16 bg-[#FAFAF6]/90 backdrop-blur-md border-b border-[#EAE8E2]">
       <Link
         href="/"
         className="flex items-center gap-2 font-[family-name:var(--font-fraunces)] text-[22px] font-medium text-[#1E3A1E] tracking-tight"
@@ -45,7 +45,7 @@ export default function Navbar() {
         {onResults && (
           <Link
             href="/search"
-            className="px-4 py-2 rounded-full text-sm font-medium text-[#1C1C1A] hover:bg-[#EAE8E2] transition-colors"
+            className="hidden sm:flex px-4 py-2 rounded-full text-sm font-medium text-[#1C1C1A] hover:bg-[#EAE8E2] transition-colors"
           >
             ← Edit search
           </Link>
@@ -57,7 +57,7 @@ export default function Navbar() {
               href="/saved"
               className="px-4 py-2 rounded-full text-sm font-medium text-[#1C1C1A] hover:bg-[#EAE8E2] transition-colors flex items-center gap-1.5"
             >
-              ♥ Saved
+              <span>♥</span><span className="hidden sm:inline">Saved</span>
             </Link>
             <div className="flex items-center gap-2 pl-2 border-l border-[#EAE8E2]">
               <div className="w-8 h-8 rounded-full bg-[#D4EAC8] flex items-center justify-center text-sm font-semibold text-[#1E3A1E]">
