@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
   // 1. Geocode the location
   const coords = location ? await geocodeLocation(location) : null;
 
-  // 2. If no API keys or geocoding failed, fall back to mock data
+  // 2. If geocoding failed or no API keys, fall back to mock data
+  // Geocoding now works without Google (uses OSM as fallback)
   const hasKeys =
     process.env.GOOGLE_PLACES_API_KEY ||
     process.env.YELP_API_KEY ||
